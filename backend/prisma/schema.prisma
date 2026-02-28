@@ -1,0 +1,483 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// USER & AUTH
+// ============================================
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String
+  firstName       String?
+  lastName        String?
+  phone           String?
+  country         String?
+  role            String   @default("USER")
+  status          String   @default("ACTIVE")
+  kycStatus       String   @default("NONE")
+  twoFactorSecret String?
+  twoFactorEnabled Boolean    @default(false)
+  emailVerified   Boolean     @default(false)
+  referralCode    String?     @unique
+  referredBy      String?
+  avatarUrl       String?
+  adminNotes      String?
+  withdrawStage   String   @default("BLOCKED")
+  lastLoginAt     DateTime?
+  lastLoginIp     String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  wallets         Wallet[]
+  deposits        Deposit[]
+  withdrawals     Withdrawal[]
+  transactions    Transaction[]
+  loginHistory    LoginHistory[]
+  sessions        Session[]
+  notifications   Notification[]
+  activityLogs    UserActivityLog[]
+
+  @@index([email])
+  @@index([status])
+  @@index([role])
+  @@map("users")
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  token       String   @unique
+  ipAddress   String?
+  userAgent   String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+model LoginHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  ipAddress   String
+  userAgent   String?
+  country     String?
+  city        String?
+  success     Boolean  @default(true)
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("login_history")
+}
+
+model UserActivityLog {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String
+  details     String?
+  ipAddress   String?
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@map("user_activity_logs")
+}
+
+// ============================================
+// COINS & WALLETS
+// ============================================
+
+model Coin {
+  id                  String    @id @default(uuid())
+  symbol              String    @unique
+  name                String
+  icon                String?
+  network             String?
+  contractAddress     String?
+  decimals            Int       @default(8)
+  depositEnabled      Boolean   @default(true)
+  withdrawEnabled     Boolean   @default(true)
+  depositAddress      String?
+  depositQrCode       String?
+  depositInstructions String?
+  depositMinimum      Decimal   @default(0)
+  withdrawalFee       Decimal   @default(0)
+  withdrawalMinimum   Decimal   @default(0)
+  confirmationNotes   String?
+  sortOrder           Int       @default(0)
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  wallets             Wallet[]
+  deposits            Deposit[]
+  withdrawals         Withdrawal[]
+  transactions        Transaction[]
+
+  @@index([symbol])
+  @@index([isActive])
+  @@map("coins")
+}
+
+model Wallet {
+  id          String   @id @default(uuid())
+  userId      String
+  coinId      String
+  balance     Decimal  @default(0)
+  frozenBalance Decimal @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coin        Coin     @relation(fields: [coinId], references: [id])
+
+  @@unique([userId, coinId])
+  @@index([userId])
+  @@index([coinId])
+  @@map("wallets")
+}
+
+// ============================================
+// TRANSACTIONS & LEDGER
+// ============================================
+
+model Transaction {
+  id              String   @id @default(uuid())
+  userId          String
+  coinId          String
+  type            String
+  status          String   @default("PENDING")
+  amount          Decimal
+  fee             Decimal           @default(0)
+  balanceBefore   Decimal
+  balanceAfter    Decimal
+  description     String?
+  referenceId     String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id])
+  coin            Coin              @relation(fields: [coinId], references: [id])
+
+  @@index([userId])
+  @@index([coinId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+// ============================================
+// DEPOSITS
+// ============================================
+
+model Deposit {
+  id              String   @id @default(uuid())
+  userId          String
+  coinId          String
+  amount          Decimal?
+  txHash          String?
+  network         String?
+  status          String   @default("PENDING")
+  adminComment    String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  userNote        String?
+  proofUrl        String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id])
+  coin            Coin          @relation(fields: [coinId], references: [id])
+
+  @@index([userId])
+  @@index([coinId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("deposits")
+}
+
+// ============================================
+// WITHDRAWALS
+// ============================================
+
+model Withdrawal {
+  id              String   @id @default(uuid())
+  userId          String
+  coinId          String
+  amount          Decimal
+  fee             Decimal  @default(0)
+  address         String
+  network         String?
+  txHash          String?
+  status          String   @default("PENDING")
+  adminComment    String?
+  rejectionReason String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  userNote        String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id])
+  coin            Coin              @relation(fields: [coinId], references: [id])
+
+  @@index([userId])
+  @@index([coinId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("withdrawals")
+}
+
+// ============================================
+// ADMIN & SYSTEM
+// ============================================
+
+model AdminLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  action      String
+  targetType  String?
+  targetId    String?
+  details     String?
+  metadata    String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("admin_logs")
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  type        String   @default("string")
+  category    String   @default("general")
+  description String?
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+  @@index([category])
+  @@map("system_settings")
+}
+
+model Announcement {
+  id          String    @id @default(uuid())
+  title       String
+  content     String
+  type        String    @default("info")
+  isActive    Boolean   @default(true)
+  priority    Int       @default(0)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive])
+  @@map("announcements")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  message     String
+  type        String   @default("info")
+  isRead      Boolean  @default(false)
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model EmailLog {
+  id          String   @id @default(uuid())
+  toEmail     String
+  toName      String?
+  subject     String
+  body        String
+  status      String   @default("sent")
+  sentBy      String?
+  error       String?
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  @@index([toEmail])
+  @@index([sentBy])
+  @@map("email_logs")
+}
+
+model MagicLink {
+  id          String   @id @default(uuid())
+  token       String   @unique
+  userId      String
+  createdBy   String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@map("magic_links")
+}
+
+// ============================================
+// EMAIL MARKETING
+// ============================================
+
+model Subscriber {
+  id            String   @id @default(uuid())
+  email         String
+  firstName     String?
+  lastName      String?
+  phone         String?
+  source        String   @default("form")
+  formId        String?
+  status        String   @default("pending")
+  confirmToken  String?
+  confirmedAt   DateTime?
+  unsubscribedAt DateTime?
+  metadata      String?
+  ipAddress     String?
+  country       String?
+  city          String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([email, formId])
+  @@index([email])
+  @@index([status])
+  @@index([formId])
+  @@map("subscribers")
+}
+
+model SubscriptionForm {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  title       String   @default("Subscribe to Our Newsletter")
+  description String   @default("Stay updated with the latest crypto news and exclusive offers.")
+  topMessage  String?
+  fields      String   @default("[\"email\",\"firstName\"]")
+  buttonText  String   @default("Subscribe")
+  successMsg  String   @default("Thank you for subscribing! Please check your email to confirm.")
+  redirectUrl String?
+  styling     String?
+  active      Boolean  @default(true)
+  requireConfirm Boolean @default(true)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("subscription_forms")
+}
+
+model EmailCampaign {
+  id          String   @id @default(uuid())
+  name        String
+  subject     String
+  body        String
+  fromName    String?
+  status      String   @default("draft")
+  targetType  String   @default("all_subscribers")
+  targetFormId String?
+  sentCount   Int      @default(0)
+  failedCount Int      @default(0)
+  openCount   Int      @default(0)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@map("email_campaigns")
+}
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  userId      String?
+  email       String
+  subject     String
+  message     String
+  status      String   @default("open")
+  priority    String   @default("normal")
+  adminReply  String?
+  repliedBy   String?
+  repliedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("support_tickets")
+}
+
+// ============================================
+// LIVE CHAT
+// ============================================
+
+model ChatSession {
+  id          String   @id @default(uuid())
+  visitorId   String
+  visitorName String?
+  visitorEmail String?
+  userId      String?
+  status      String   @default("active")
+  lastMessageAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    ChatMessage[]
+
+  @@index([visitorId])
+  @@index([status])
+  @@index([lastMessageAt])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  sessionId   String
+  sender      String   @default("visitor")
+  message     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
