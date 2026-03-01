@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
-import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
@@ -17,7 +15,8 @@ import { SettingsModule } from './settings/settings.module';
 import { EmailModule } from './email/email.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MarketingModule } from './marketing/marketing.module';
-import { ChatModule } from './chat/chat.module';
+// ChatModule disabled on Vercel serverless (no WebSocket support)
+// import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import { ChatModule } from './chat/chat.module';
       ttl: parseInt(process.env.RATE_LIMIT_TTL || '60') * 1000,
       limit: parseInt(process.env.RATE_LIMIT_MAX || '600'),
     }]),
-    ScheduleModule.forRoot(),
     PrismaModule,
     RedisModule,
     AuthModule,
@@ -41,7 +39,6 @@ import { ChatModule } from './chat/chat.module';
     EmailModule,
     NotificationsModule,
     MarketingModule,
-    ChatModule,
   ],
   providers: [
     // ThrottlerGuard disabled in dev — re-enable for production
