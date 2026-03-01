@@ -4,7 +4,7 @@ import { WalletsService } from '../wallets/wallets.service';
 import { EmailService } from '../email/email.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { Decimal } from '@prisma/client/runtime/library';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AdminService {
