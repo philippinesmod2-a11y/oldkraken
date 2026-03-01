@@ -12,7 +12,7 @@
     "vercel-build": "prisma generate && nest build && npx ncc build dist/src/serverless.js -o api --minify -e socket.io -e @nestjs/websockets -e @nestjs/platform-socket.io -e @nestjs/schedule -e ioredis -e bcrypt",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
