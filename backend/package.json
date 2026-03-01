@@ -9,7 +9,7 @@
   "scripts": {
     "postinstall": "prisma generate",
     "build": "prisma generate && nest build",
-    "vercel-build": "prisma generate && nest build && npx ncc build dist/src/serverless.js -o api --minify",
+    "vercel-build": "prisma generate && nest build && npx ncc build dist/src/serverless.js -o api --minify -e socket.io -e @nestjs/websockets -e @nestjs/platform-socket.io -e @nestjs/schedule -e ioredis",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
