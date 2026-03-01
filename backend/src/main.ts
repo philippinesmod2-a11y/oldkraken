@@ -57,8 +57,8 @@ async function bootstrap() {
     res.json({ status: 'ok', version: '1.0.0', timestamp: new Date().toISOString(), service: 'OldKraken API' });
   });
 
-  const port = process.env.BACKEND_PORT || 4000;
-  await app.listen(port);
+  const port = process.env.PORT || process.env.BACKEND_PORT || 4000;
+  await app.listen(port, '0.0.0.0');
   console.log(`🐙 OldKraken API running on port ${port}`);
 }
 
