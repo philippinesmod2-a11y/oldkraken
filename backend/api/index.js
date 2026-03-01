@@ -1,21 +1,54 @@
-// Vercel serverless entry — imports from compiled NestJS dist
+// Vercel serverless entry
+const fs = require('fs');
 const path = require('path');
 
-let handler;
+let cachedHandler;
 
 module.exports = async (req, res) => {
+  // Debug: check what files exist
+  const distPath = path.join(process.cwd(), 'dist');
+  const distExists = fs.existsSync(distPath);
+  const distApiPath = path.join(__dirname, '..', 'dist');
+  const distApiExists = fs.existsSync(distApiPath);
+
+  if (req.url === '/health' || req.url === '/') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({
+      status: 'ok',
+      debug: {
+        cwd: process.cwd(),
+        dirname: __dirname,
+        distFromCwd: distExists,
+        distFromApi: distApiExists,
+        cwdFiles: fs.existsSync(process.cwd()) ? fs.readdirSync(process.cwd()).slice(0, 20) : [],
+        distFiles: distExists ? fs.readdirSync(distPath).slice(0, 20) : (distApiExists ? fs.readdirSync(distApiPath).slice(0, 20) : []),
+      }
+    }));
+  }
+
   try {
-    if (!handler) {
-      const serverlessPath = path.join(__dirname, '..', 'dist', 'serverless');
-      handler = require(serverlessPath).default;
+    if (!cachedHandler) {
+      // Try multiple paths
+      const paths = [
+        path.join(process.cwd(), 'dist', 'serverless'),
+        path.join(__dirname, '..', 'dist', 'serverless'),
+        path.join(__dirname, 'dist', 'serverless'),
+      ];
+      for (const p of paths) {
+        if (fs.existsSync(p + '.js')) {
+          cachedHandler = require(p).default;
+          break;
+        }
+      }
+      if (!cachedHandler) {
+        throw new Error('Could not find dist/serverless.js in any path: ' + paths.map(p => p + '.js').join(', '));
+      }
     }
-    return await handler(req, res);
+    return await cachedHandler(req, res);
   } catch (error) {
-    console.error('Serverless bootstrap error:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: error.message,
-      stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
-    });
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: error.message }));
   }
 };
