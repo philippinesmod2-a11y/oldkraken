@@ -1,14 +1,5 @@
 {
   "version": 2,
-  "installCommand": "npm install",
-  "buildCommand": "npx prisma generate && npx nest build",
-  "outputDirectory": ".",
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30,
-      "includeFiles": "dist/**,node_modules/.prisma/**,node_modules/@prisma/client/**,prisma/schema.prisma"
-    }
-  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/api" }
   ]
