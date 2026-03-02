@@ -89,8 +89,9 @@ export default function HomePage() {
   }, []);
 
   async function fetchMarketData() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
     try {
-      const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&sparkline=true&price_change_percentage=24h');
+      const res = await fetch(`${apiUrl}/api/market`);
       if (res.ok) {
         const data = await res.json();
         setCoins(data);
@@ -101,13 +102,13 @@ export default function HomePage() {
     finally { setLoading(false); }
 
     try {
-      const fgRes = await fetch('https://api.alternative.me/fng/?limit=1');
-      if (fgRes.ok) { const fgData = await fgRes.json(); setFearGreed({ value: fgData.data[0].value, classification: fgData.data[0].value_classification }); }
+      const fgRes = await fetch(`${apiUrl}/api/market/fear-greed`);
+      if (fgRes.ok) { const fgData = await fgRes.json(); setFearGreed({ value: fgData.value, classification: fgData.classification }); }
     } catch {}
 
     try {
-      const gRes = await fetch('https://api.coingecko.com/api/v3/global');
-      if (gRes.ok) { const gData = await gRes.json(); setBtcDominance(gData.data.market_cap_percentage.btc.toFixed(1)); }
+      const gRes = await fetch(`${apiUrl}/api/market/global`);
+      if (gRes.ok) { const gData = await gRes.json(); setBtcDominance(gData.btcDominance); }
     } catch {}
   }
 

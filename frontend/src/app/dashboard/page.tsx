@@ -95,19 +95,6 @@ export default function DashboardPage() {
             total += parseFloat(w.balance) * (priceMap[w.coin.symbol] || 0);
           });
           setTotalUSD(total);
-        } else {
-          // Fallback to CoinGecko direct
-          const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin,binancecoin,solana,ripple,cardano,dogecoin,polkadot&vs_currencies=usd');
-          if (res.ok) {
-            const data = await res.json();
-            const priceMap: Record<string, number> = {};
-            const symbolToId: Record<string, string> = { BTC: 'bitcoin', ETH: 'ethereum', USDT: 'tether', USDC: 'usd-coin', BNB: 'binancecoin', SOL: 'solana', XRP: 'ripple', ADA: 'cardano', DOGE: 'dogecoin', DOT: 'polkadot' };
-            Object.entries(symbolToId).forEach(([symbol, id]) => { if (data[id]) priceMap[symbol] = data[id].usd; });
-            setPrices(priceMap);
-            let total = 0;
-            (walletsRes.data || []).forEach((w: WalletData) => { total += parseFloat(w.balance) * (priceMap[w.coin.symbol] || 0); });
-            setTotalUSD(total);
-          }
         }
       } catch {}
     } catch (err) {

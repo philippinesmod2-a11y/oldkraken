@@ -63,20 +63,6 @@ export default function WalletsPage() {
             }
           });
           setPrices(priceMap);
-        } else {
-          const ids = data.map((w: WalletData) => COIN_PRICES[w.coin.symbol]).filter(Boolean).join(',');
-          if (ids) {
-            const priceRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
-            if (priceRes.ok) {
-              const priceData = await priceRes.json();
-              const priceMap: Record<string, number> = {};
-              data.forEach((w: WalletData) => {
-                const id = COIN_PRICES[w.coin.symbol];
-                if (id && priceData[id]) priceMap[w.coin.symbol] = priceData[id].usd;
-              });
-              setPrices(priceMap);
-            }
-          }
         }
       } catch {}
     } catch {}
