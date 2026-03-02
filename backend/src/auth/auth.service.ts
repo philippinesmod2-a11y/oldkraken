@@ -5,6 +5,7 @@ import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { EmailService } from '../email/email.service';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,6 +15,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private redis: RedisService,
+    private emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto, ip?: string) {
@@ -39,6 +41,10 @@ export class AuthService {
     });
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+    // Send welcome email via Resend
+    this.emailService.sendWelcomeEmail(user.email, dto.firstName).catch(() => {});
+
     return { user: this.sanitizeUser(user), ...tokens };
   }
 
@@ -233,23 +239,8 @@ export class AuthService {
       </div>
     `;
 
-    try {
-      const nodemailer = await import('nodemailer');
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
-      });
-      await transporter.sendMail({
-        from: `"OldKraken" <${process.env.SMTP_FROM_EMAIL || 'noreply@oldkraken.com'}>`,
-        to: user.email,
-        subject: 'OldKraken — Password Reset Request',
-        html,
-      });
-    } catch (err) {
-      // Email failed but we still return success (token saved in Redis)
-    }
+    // Send via Resend EmailService
+    this.emailService.sendEmail(user.email, 'OldKraken — Password Reset Request', html).catch(() => {});
 
     return { message: 'If that email is registered, a reset link has been sent.' };
   }

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/store';
 import api from '@/lib/api';
 import { ArrowLeft, Copy, Check, Upload, Clock, CheckCircle, XCircle, AlertTriangle, Shield, Info, BookOpen, HelpCircle, Mail, ExternalLink, CreditCard, ArrowRight } from 'lucide-react';
+import Web3Deposit from '@/components/Web3Deposit';
 
 interface CoinInfo {
   id: string;
@@ -344,6 +345,16 @@ export default function DepositPage() {
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Web3 Wallet Connect */}
+                  {depositInfo?.address && (
+                    <Web3Deposit
+                      depositAddress={depositInfo.address}
+                      coinSymbol={selectedCoin.symbol}
+                      network={depositInfo?.network || selectedCoin.network}
+                      onTxSubmitted={(hash, amt) => { setTxHash(hash); setAmount(amt); }}
+                    />
                   )}
 
                   <div className="space-y-4">
