@@ -21,12 +21,12 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
     if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
       return [
         {
           source: '/api/:path*',
-          destination: `${apiUrl}/:path*`,
+          destination: `${apiUrl}/api/:path*`,
         },
       ];
     }

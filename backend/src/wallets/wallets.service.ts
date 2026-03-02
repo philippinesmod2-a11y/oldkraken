@@ -22,10 +22,23 @@ export class WalletsService {
     });
 
     if (!wallet) {
-      wallet = await this.prisma.wallet.create({
-        data: { userId, coinId },
-        include: { coin: true },
-      });
+      try {
+        wallet = await this.prisma.wallet.create({
+          data: { userId, coinId },
+          include: { coin: true },
+        });
+      } catch (e: any) {
+        // Handle race condition: another request already created this wallet
+        if (e.code === 'P2002') {
+          wallet = await this.prisma.wallet.findUnique({
+            where: { userId_coinId: { userId, coinId } },
+            include: { coin: true },
+          });
+          if (!wallet) throw e;
+        } else {
+          throw e;
+        }
+      }
     }
     return wallet;
   }

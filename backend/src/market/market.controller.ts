@@ -12,12 +12,24 @@ export class MarketController {
 
   @Get('global')
   async getGlobalData() {
-    return this.marketService.getGlobalData();
+    const raw = await this.marketService.getGlobalData();
+    if (!raw?.data) return { btcDominance: '0', totalMarketCap: 0, totalVolume: 0 };
+    return {
+      btcDominance: raw.data.market_cap_percentage?.btc?.toFixed(1) || '0',
+      totalMarketCap: raw.data.total_market_cap?.usd || 0,
+      totalVolume: raw.data.total_volume?.usd || 0,
+      activeCryptos: raw.data.active_cryptocurrencies || 0,
+    };
   }
 
   @Get('fear-greed')
   async getFearGreed() {
-    return this.marketService.getFearGreedIndex();
+    const raw = await this.marketService.getFearGreedIndex();
+    const entry = raw?.data?.[0];
+    return {
+      value: entry?.value || '50',
+      classification: entry?.value_classification || 'Neutral',
+    };
   }
 
   @Get('trending')
