@@ -82,16 +82,15 @@ export default function HomePage() {
   useEffect(() => {
     fetchMarketData();
     const interval = setInterval(fetchMarketData, 20000);
-    // Fetch live platform stats
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/stats`)
+    // Fetch live platform stats (relative URL goes through Vercel rewrite proxy)
+    fetch('/api/settings/stats')
       .then(r => r.json()).then(d => setPlatformStats(d)).catch(() => {});
     return () => clearInterval(interval);
   }, []);
 
   async function fetchMarketData() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
     try {
-      const res = await fetch(`${apiUrl}/api/market`);
+      const res = await fetch('/api/market');
       if (res.ok) {
         const data = await res.json();
         setCoins(data);
@@ -102,12 +101,12 @@ export default function HomePage() {
     finally { setLoading(false); }
 
     try {
-      const fgRes = await fetch(`${apiUrl}/api/market/fear-greed`);
+      const fgRes = await fetch('/api/market/fear-greed');
       if (fgRes.ok) { const fgData = await fgRes.json(); setFearGreed({ value: fgData.value, classification: fgData.classification }); }
     } catch {}
 
     try {
-      const gRes = await fetch(`${apiUrl}/api/market/global`);
+      const gRes = await fetch('/api/market/global');
       if (gRes.ok) { const gData = await gRes.json(); setBtcDominance(gData.btcDominance); }
     } catch {}
   }
