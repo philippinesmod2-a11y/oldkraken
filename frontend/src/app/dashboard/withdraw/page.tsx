@@ -14,6 +14,7 @@ export default function WithdrawPage() {
   const [stage, setStage] = useState('BLOCKED');
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [wallets, setWallets] = useState<any[]>([]);
+  const [prices, setPrices] = useState<Record<string, number>>({});
   const [showFaq, setShowFaq] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
 
@@ -28,6 +29,12 @@ export default function WithdrawPage() {
         const w = r.data?.wallets || [];
         setWallets(w.filter((wallet: any) => parseFloat(wallet.balance || '0') > 0));
       }).catch(() => {}),
+      api.get('/market?perPage=50').then(r => {
+        const data = Array.isArray(r.data) ? r.data : [];
+        const pm: Record<string, number> = {};
+        data.forEach((c: any) => { if (c.symbol && c.current_price) pm[c.symbol.toUpperCase()] = c.current_price; });
+        setPrices(pm);
+      }).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [isAuthenticated]);
 
@@ -36,7 +43,8 @@ export default function WithdrawPage() {
   const supportEmail = settings.support_email || 'support@oldkraken.com';
 
   const totalBalance = wallets.reduce((sum: number, w: any) => {
-    const usdVal = parseFloat(w.coin?.currentPrice || '0') * parseFloat(w.balance || '0');
+    const price = prices[w.coin?.symbol] || 0;
+    const usdVal = price * parseFloat(w.balance || '0');
     return sum + usdVal;
   }, 0);
 
@@ -111,7 +119,7 @@ export default function WithdrawPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-white font-mono text-sm font-semibold">{parseFloat(w.balance).toFixed(6)}</p>
-                  <p className="text-dark-500 text-xs">${(parseFloat(w.coin?.currentPrice || '0') * parseFloat(w.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  <p className="text-dark-500 text-xs">${((prices[w.coin?.symbol] || 0) * parseFloat(w.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               </div>
             ))}
