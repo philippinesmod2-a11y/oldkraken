@@ -74,31 +74,31 @@ export default function WalletsPage() {
   return (
     <>
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-base font-bold text-white">{t('wallet.my_wallets')}</h1>
-            <p className="text-dark-500 text-[11px]">{t('wallet.all_balances')}</p>
+            <h1 className="text-lg sm:text-xl font-bold text-white">{t('wallet.my_wallets')}</h1>
+            <p className="text-dark-400 text-xs sm:text-sm">{t('wallet.all_balances')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/dashboard/deposit" className="btn-primary inline-flex items-center gap-1.5">
-              <ArrowDownToLine className="w-3 h-3" /> {t('wallet.deposit')}
+            <Link href="/dashboard/deposit" className="btn-primary inline-flex items-center gap-1.5 !py-2.5 !px-4 text-sm font-semibold">
+              <ArrowDownToLine className="w-4 h-4" /> {t('wallet.deposit')}
             </Link>
-            <Link href="/dashboard/withdraw" className="btn-secondary inline-flex items-center gap-1.5">
-              <ArrowUpFromLine className="w-3 h-3" /> {t('wallet.withdraw')}
+            <Link href="/dashboard/withdraw" className="btn-secondary inline-flex items-center gap-1.5 !py-2.5 !px-4 text-sm font-semibold">
+              <ArrowUpFromLine className="w-4 h-4" /> {t('wallet.withdraw')}
             </Link>
           </div>
         </div>
 
         {/* Portfolio total */}
-        <div className="glass-card mb-3 relative overflow-hidden">
+        <div className="glass-card mb-4 relative overflow-hidden !p-5">
           <div className="absolute inset-0 bg-gradient-to-r from-primary-900/20 to-cyan-900/10" />
           <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-dark-500 text-[10px] uppercase tracking-wider mb-0.5">{t('wallet.total_portfolio')}</p>
-              <h2 className="text-2xl font-black text-white">${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+              <p className="text-dark-400 text-xs uppercase tracking-wider mb-1">{t('wallet.total_portfolio')}</p>
+              <h2 className="text-3xl sm:text-4xl font-black text-white">${totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
             </div>
             <div className="text-right">
-              <p className="text-dark-400 text-xs">{wallets.length} {t('wallet.assets')}</p>
+              <p className="text-dark-300 text-sm font-medium">{wallets.length} {t('wallet.assets')}</p>
             </div>
           </div>
         </div>
@@ -118,14 +118,52 @@ export default function WalletsPage() {
             </Link>
           </div>
         ) : (
-          <div className="glass rounded-lg overflow-hidden">
+          <>
+          {/* Mobile: Card layout */}
+          <div className="space-y-3 sm:hidden">
+            {wallets.map((wallet) => {
+              const balance = parseFloat(wallet.balance);
+              const price = prices[wallet.coin.symbol] || 0;
+              const usdVal = balance * price;
+              return (
+                <div key={wallet.id} className="glass-card !p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <CoinIcon symbol={wallet.coin.symbol} size={9} />
+                      <div>
+                        <p className="text-white font-bold text-base">{wallet.coin.symbol}</p>
+                        <p className="text-dark-400 text-xs">{wallet.coin.name}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-mono font-bold text-lg ${usdVal > 0 ? 'text-white' : 'text-dark-500'}`}>
+                        {usdVal > 0 ? `$${usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00'}
+                      </p>
+                      <p className="text-dark-400 text-xs font-mono">{balance > 0 ? balance.toFixed(6) : '0'} {wallet.coin.symbol}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link href="/dashboard/deposit" className="flex-1 text-center py-2.5 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm font-semibold hover:bg-green-500/20 transition-colors">
+                      Deposit
+                    </Link>
+                    <Link href="/dashboard/withdraw" className="flex-1 text-center py-2.5 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm font-semibold hover:bg-red-500/20 transition-colors">
+                      Withdraw
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop: Table layout */}
+          <div className="glass rounded-lg overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="pro-table">
                 <thead>
                   <tr>
                     <th>{t('wallet.asset')}</th>
                     <th className="text-right">{t('wallet.balance')}</th>
-                    <th className="text-right hidden sm:table-cell">{t('wallet.frozen_col')}</th>
+                    <th className="text-right hidden md:table-cell">{t('wallet.frozen_col')}</th>
                     <th className="text-right hidden md:table-cell">{t('wallet.price')}</th>
                     <th className="text-right">{t('wallet.value_usd')}</th>
                     <th className="text-right">{t('wallet.actions')}</th>
@@ -144,26 +182,26 @@ export default function WalletsPage() {
                           <div className="flex items-center gap-2">
                             <CoinIcon symbol={wallet.coin.symbol} size={9} />
                             <div>
-                              <span className="text-white font-semibold">{wallet.coin.symbol}</span>
-                              <span className="text-dark-500 ml-1.5">{wallet.coin.name}</span>
+                              <span className="text-white font-bold text-sm">{wallet.coin.symbol}</span>
+                              <span className="text-dark-400 ml-1.5 text-sm">{wallet.coin.name}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="text-right font-mono text-white">{balance.toFixed(8)}</td>
-                        <td className="text-right hidden sm:table-cell">
-                          <span className={`font-mono ${frozen > 0 ? 'text-yellow-400' : 'text-dark-600'}`}>{frozen.toFixed(8)}</span>
+                        <td className="text-right font-mono text-white text-sm">{balance.toFixed(6)}</td>
+                        <td className="text-right hidden md:table-cell">
+                          <span className={`font-mono text-sm ${frozen > 0 ? 'text-yellow-400' : 'text-dark-600'}`}>{frozen.toFixed(6)}</span>
                         </td>
-                        <td className="text-right hidden md:table-cell font-mono">{price > 0 ? `$${price.toLocaleString()}` : '—'}</td>
+                        <td className="text-right hidden md:table-cell font-mono text-sm">{price > 0 ? `$${price.toLocaleString()}` : '—'}</td>
                         <td className="text-right">
-                          <span className={`font-mono font-semibold ${usdVal > 0 ? 'text-white' : 'text-dark-500'}`}>
+                          <span className={`font-mono font-bold text-sm ${usdVal > 0 ? 'text-white' : 'text-dark-500'}`}>
                             {usdVal > 0 ? `$${usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
                           </span>
-                          {pct > 0 && <span className="text-dark-500 text-[10px] ml-1">({pct.toFixed(1)}%)</span>}
+                          {pct > 0 && <span className="text-dark-500 text-xs ml-1">({pct.toFixed(1)}%)</span>}
                         </td>
                         <td className="text-right">
-                          <div className="flex gap-1.5 justify-end">
-                            <Link href="/dashboard/deposit" className="text-green-400 hover:text-green-300 text-[10px] font-medium">Deposit</Link>
-                            <Link href="/dashboard/withdraw" className="text-red-400 hover:text-red-300 text-[10px] font-medium">Withdraw</Link>
+                          <div className="flex gap-2 justify-end">
+                            <Link href="/dashboard/deposit" className="text-green-400 hover:text-green-300 text-xs font-semibold">Deposit</Link>
+                            <Link href="/dashboard/withdraw" className="text-red-400 hover:text-red-300 text-xs font-semibold">Withdraw</Link>
                           </div>
                         </td>
                       </tr>
@@ -173,6 +211,7 @@ export default function WalletsPage() {
               </table>
             </div>
           </div>
+          </>
         )}
 
         <div className="mt-2 px-1">

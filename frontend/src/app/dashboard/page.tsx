@@ -159,9 +159,9 @@ export default function DashboardPage() {
               { label: t('nav.transactions'), href: '/dashboard/transactions', icon: '📋', color: 'from-cyan-900/30 to-cyan-800/10 border-cyan-700/30', text: 'text-cyan-400', tip: t('dashboard.transactions_tip') },
             ].map((action: any) => (
               <button key={action.label} onClick={action.action ? action.action : () => router.push(action.href)} title={action.tip}
-                className={`bg-gradient-to-br ${action.color} border rounded-lg p-2 text-center hover:scale-[1.02] hover:opacity-90 transition-all`}>
-                <span className="text-sm">{action.icon}</span>
-                <p className={`${action.text} text-[11px] font-bold`}>{action.label}</p>
+                className={`bg-gradient-to-br ${action.color} border rounded-lg p-3 sm:p-2 text-center hover:scale-[1.02] hover:opacity-90 transition-all`}>
+                <span className="text-xl sm:text-sm">{action.icon}</span>
+                <p className={`${action.text} text-sm sm:text-[11px] font-bold mt-1`}>{action.label}</p>
               </button>
             ))}
           </div>
