@@ -1,3 +1,6 @@
+export const APP_NAME = 'OldKraken';
+export const APP_VERSION = '1.0.1';
+
 export const businessConfig = {
   companyName: 'OldKraken Exchange',
   registrationId: 'PLACEHOLDER-REG-ID',
