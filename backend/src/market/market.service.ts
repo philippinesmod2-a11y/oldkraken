@@ -11,13 +11,17 @@ export class MarketService {
   async getMarketData(page = 1, perPage = 100) {
     const cacheKey = `market:data:${page}:${perPage}`;
     const cached = await this.redis.getJson<any>(cacheKey);
-    if (cached) return cached;
+    if (cached && Array.isArray(cached)) return cached;
 
     try {
       const response = await fetch(
         `${this.COINGECKO_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`,
       );
       const data = await response.json();
+      if (!Array.isArray(data)) {
+        this.logger.warn(`CoinGecko returned non-array: ${JSON.stringify(data).slice(0, 200)}`);
+        return [];
+      }
       await this.redis.setJson(cacheKey, data, 20);
       return data;
     } catch (error) {
