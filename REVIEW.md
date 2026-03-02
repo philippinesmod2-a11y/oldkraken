@@ -1,8 +1,9 @@
-# OldKraken Platform — Full Code Review
+# OldKraken Platform — Full Code Review v2
 
 **Date:** March 2, 2026
 **Reviewed by:** Cascade AI
 **Status:** Production (Railway + Vercel + Supabase)
+**Domain:** https://www.oldkraken.help
 
 ---
 
